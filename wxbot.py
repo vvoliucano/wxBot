@@ -72,6 +72,10 @@ class WXBot:
         self.sync_key_str = ''
         self.sync_key = []
         self.sync_host = ''
+        
+        self.watch_name = {}
+        
+        self.real_quit = False #机器人真正退出，
 
         #文件缓存目录
         self.temp_pwd  =  os.path.join(os.getcwd(),'temp')
@@ -608,8 +612,16 @@ class WXBot:
                 [retcode, selector] = self.sync_check()
                 # print '[DEBUG] sync_check:', retcode, selector
                 if retcode == '1100':  # 从微信客户端上登出
+                    self.write_file()
+                    print "文件已保存！"
+                    break
+                elif self.real_quit :
+                    self.write_file()
+                    print "文件已保存！"
                     break
                 elif retcode == '1101':  # 从其它设备上登了网页微信
+                    self.write_file()
+                    print "文件已保存！"
                     break
                 elif retcode == '0':
                     if selector == '2':  # 有新消息
@@ -988,8 +1000,35 @@ class WXBot:
         self.get_contact()
         print '[INFO] Get %d contacts' % len(self.contact_list)
         print '[INFO] Start to process messages .'
+        self.read_file()
         self.proc_msg()
-
+            
+    def read_file(self):
+        #读取一些配置文件
+        file = open("/Users/tsunmac/Desktop/try/wxBot-master/name_list.txt",'r')
+        try:
+            for line in file:
+                tmp = line.strip('\n').strip('\r')
+                tmp = self.to_unicode(tmp)
+                self.watch_name[tmp] = 1
+                print u'['+ tmp +u']'+ u'已关注'
+    
+        finally:
+            file.close()
+    def write_file(self):
+        reload(sys)                         # 2
+        sys.setdefaultencoding('utf-8')     # 3
+        file = open("/Users/tsunmac/Desktop/try/wxBot-master/name_list.txt",'w')
+        try:
+            for key in self.watch_name:
+                if self.watch_name[key]:
+                    tmp = (key)
+                    file.write(tmp)
+                    file.write("\n")
+        finally:
+            file.close()
+    
+    
     def get_uuid(self):
         url = 'https://login.weixin.qq.com/jslogin'
         params = {
